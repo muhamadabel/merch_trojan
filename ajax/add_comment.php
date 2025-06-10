@@ -4,6 +4,10 @@ require_once '../includes/functions.php';
 
 header('Content-Type: application/json');
 
+// Debug: Log all incoming data
+error_log("POST data: " . print_r($_POST, true));
+error_log("Session data: " . print_r($_SESSION, true));
+
 if (!isLoggedIn()) {
     echo json_encode(['success' => false, 'message' => 'Please login first']);
     exit;
@@ -18,8 +22,11 @@ $post_id = intval($_POST['post_id'] ?? 0);
 $content = trim($_POST['content'] ?? '');
 $user_id = $_SESSION['user_id'];
 
+// Debug: Log processed data
+error_log("Processed - post_id: $post_id, content: $content, user_id: $user_id");
+
 if ($post_id <= 0 || empty($content)) {
-    echo json_encode(['success' => false, 'message' => 'Invalid post ID or empty comment']);
+    echo json_encode(['success' => false, 'message' => 'Invalid post ID or empty comment', 'debug' => ['post_id' => $post_id, 'content' => $content]]);
     exit;
 }
 
@@ -30,16 +37,21 @@ try {
     $post = $stmt->fetch();
     
     if (!$post) {
-        echo json_encode(['success' => false, 'message' => 'Post not found']);
+        echo json_encode(['success' => false, 'message' => 'Post not found', 'post_id' => $post_id]);
         exit;
     }
     
     // Add comment
     $stmt = $pdo->prepare("
-        INSERT INTO comments (post_id, user_id, content) 
-        VALUES (?, ?, ?)
+        INSERT INTO comments (post_id, user_id, content, created_at) 
+        VALUES (?, ?, ?, NOW())
     ");
-    $stmt->execute([$post_id, $user_id, $content]);
+    $result = $stmt->execute([$post_id, $user_id, $content]);
+    
+    if (!$result) {
+        echo json_encode(['success' => false, 'message' => 'Failed to insert comment', 'error' => $stmt->errorInfo()]);
+        exit;
+    }
     
     // Get the new comment with user info
     $comment_id = $pdo->lastInsertId();
@@ -59,6 +71,7 @@ try {
     ]);
     
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error adding comment']);
+    error_log("Error adding comment: " . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'Error adding comment: ' . $e->getMessage()]);
 }
 ?>

@@ -7,7 +7,7 @@ require_once 'includes/functions.php';
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 // Get products
-$query = "SELECT * FROM products WHERE stock > 0";
+$query = "SELECT * FROM products";
 $params = [];
 
 if (!empty($search)) {
@@ -55,9 +55,17 @@ $products = $stmt->fetchAll();
                                 <p class="product-description"><?php echo htmlspecialchars($product['description']); ?></p>
                                 <div class="product-footer">
                                     <span class="product-price"><?php echo formatPrice($product['price']); ?></span>
-                                    <span class="product-stock">Stock: <?php echo $product['stock']; ?></span>
+                                    <?php if ($product['stock'] > 0): ?>
+                                        <span class="product-stock">Stock: <?php echo $product['stock']; ?></span>
+                                    <?php else: ?>
+                                        <span class="product-stock out-of-stock">Out of Stock</span>
+                                    <?php endif; ?>
                                 </div>
-                                <button class="btn btn-primary" onclick="addToCart(<?php echo $product['product_id']; ?>)" style="width: 100%;">Add to Cart</button>
+                                <?php if ($product['stock'] > 0): ?>
+                                    <button class="btn btn-primary" onclick="addToCart(<?php echo $product['product_id']; ?>)" style="width: 100%;">Add to Cart</button>
+                                <?php else: ?>
+                                    <button class="btn btn-secondary" disabled style="width: 100%; opacity: 0.6;">Out of Stock</button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>

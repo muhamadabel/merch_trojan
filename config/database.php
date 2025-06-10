@@ -1,9 +1,9 @@
 <?php
 // Database configuration
 $host = 'localhost';
-$dbname = 'u985354573_merch_trojan';
-$username = 'u985354573_Abel';
-$password = 'Muhamadabel123';
+$dbname = 'merch_trojan';
+$username = 'root';
+$password = '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
